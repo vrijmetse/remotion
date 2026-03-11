@@ -239,6 +239,9 @@ export const NarrationVideo: React.FC<NarrationVideoProps> = ({
           );
         })}
         <Series.Sequence durationInFrames={30}>
+          <AbsoluteFill style={{ backgroundColor: "#050505" }} />
+        </Series.Sequence>
+        <Series.Sequence durationInFrames={30}>
           <LikeAndSubscribeScene />
         </Series.Sequence>
       </Series>
@@ -253,6 +256,7 @@ export const calculateNarrationMetadata: CalculateMetadataFunction<
 > = async ({ props }) => {
   const fps = 30;
   const tFrames = 0;
+  const gapDur = 30;
   const likeAndSubscribeDur = 30;
 
   const updatedScenes = await Promise.all(
@@ -276,7 +280,7 @@ export const calculateNarrationMetadata: CalculateMetadataFunction<
     updatedScenes.reduce((acc, s) => acc + (s.durationInFrames || 0), 0) -
     (updatedScenes.length - 1) * tFrames;
   return {
-    durationInFrames: Math.max(finalDuration + likeAndSubscribeDur - tFrames, 30),
+    durationInFrames: Math.max(finalDuration + gapDur + likeAndSubscribeDur - tFrames, 30),
     props: { ...props, scenes: updatedScenes },
   };
 };
