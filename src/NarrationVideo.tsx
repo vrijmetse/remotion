@@ -81,12 +81,6 @@ const NarrationScene: React.FC<{
   const activeCue = useMemo(() => getSafeCue(scene.technical_cue), [scene.technical_cue]);
   const mDur = Math.min(duration, audioDurationInFrames + 15);
 
-  const opacity = interpolate(
-    frame,
-    [0, 10, duration - 10, duration],
-    [0, 1, 1, 0],
-  );
-
   // 1. Handle Transformations
   const transform = useMemo(() => {
     switch (activeCue) {
@@ -136,7 +130,7 @@ const NarrationScene: React.FC<{
           filter: visualFilter,
         }}
       />
-      <AbsoluteFill style={{ opacity }}>
+      <AbsoluteFill>
         {scene.captions && scene.captions.length > 0 && (
           <TikTokCaptions captions={scene.captions} fps={30} />
         )}
