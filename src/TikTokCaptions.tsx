@@ -66,7 +66,7 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
                 transform: isActive 
                   ? `scale(1.12) rotate(${index % 2 === 0 ? -1.5 : 1.5}deg)` 
                   : `scale(1) rotate(0deg)`,
-                transition: "all 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                transition: "transform 0.12s, color 0.12s, background-color 0.12s, text-shadow 0.12s",
                 display: "inline-block",
                 textShadow: isActive ? "none" : "0 4px 15px rgba(0,0,0,1)",
                 opacity: hasBeenSpoken ? 1 : 0,
