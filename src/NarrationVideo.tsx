@@ -11,7 +11,6 @@ import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { getAudioDuration } from "./getAudioDuration";
 import type { Caption } from "@remotion/captions";
-import { alignmentToCaptions, type ElevenLabsAlignment } from "./alignmentToCaptions";
 import { TikTokCaptions } from "./TikTokCaptions";
 
 export type TechnicalCue =
@@ -34,7 +33,6 @@ export type SceneType = {
   durationInFrames?: number;
   audioDurationSeconds?: number;
   captions?: Caption[];
-  alignment?: ElevenLabsAlignment;
 };
 
 export type NarrationVideoProps = {
@@ -266,9 +264,7 @@ export const calculateNarrationMetadata: CalculateMetadataFunction<
   const updatedScenes = await Promise.all(
     props.scenes.map(async (scene) => {
       const aDur = await getAudioDuration(scene.audioSrc);
-      const captions = scene.alignment
-        ? alignmentToCaptions(scene.alignment)
-        : scene.captions ?? [];
+      const captions = scene.captions ?? [];
       const basePadding = 15;
       const durInFrames = Math.max(
         Math.ceil(aDur * fps) + basePadding,
