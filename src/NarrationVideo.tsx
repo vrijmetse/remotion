@@ -6,10 +6,9 @@ import {
   useCurrentFrame,
   CalculateMetadataFunction,
   Sequence,
+  Series,
 } from "remotion";
 import { Audio } from "@remotion/media";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
 import { getAudioDuration } from "./getAudioDuration";
 import type { Caption } from "@remotion/captions";
 import { TikTokCaptions } from "./TikTokCaptions";
@@ -77,11 +76,10 @@ const NarrationScene: React.FC<{
   scene: SceneType;
   duration: number;
   audioDurationInFrames: number;
-  audioOffset: number;
-}> = ({ scene, duration, audioDurationInFrames, audioOffset }) => {
+}> = ({ scene, duration, audioDurationInFrames }) => {
   const frame = useCurrentFrame();
   const activeCue = useMemo(() => getSafeCue(scene.technical_cue), [scene.technical_cue]);
-  const mDur = Math.min(duration, audioDurationInFrames + 15 + audioOffset);
+  const mDur = Math.min(duration, audioDurationInFrames + 15);
 
   const opacity = interpolate(
     frame,
@@ -138,14 +136,12 @@ const NarrationScene: React.FC<{
           filter: visualFilter,
         }}
       />
-      <Sequence from={audioOffset} layout="none">
-        <AbsoluteFill style={{ opacity }}>
-          {scene.captions && scene.captions.length > 0 && (
-            <TikTokCaptions captions={scene.captions} fps={30} />
-          )}
-        </AbsoluteFill>
-        <Audio src={scene.audioSrc} />
-      </Sequence>
+      <AbsoluteFill style={{ opacity }}>
+        {scene.captions && scene.captions.length > 0 && (
+          <TikTokCaptions captions={scene.captions} fps={30} />
+        )}
+      </AbsoluteFill>
+      <Audio src={scene.audioSrc} />
     </AbsoluteFill>
   );
 };
@@ -223,36 +219,29 @@ export const NarrationVideo: React.FC<NarrationVideoProps> = ({
   scenes,
   bgMusicSrc,
 }) => {
-  const tFrames = 8;
+  const tFrames = 0;
   return (
     <AbsoluteFill style={{ backgroundColor: "#050505" }}>
       {bgMusicSrc && <Audio src={bgMusicSrc} volume={0.06} loop />}
-      <TransitionSeries>
+      <Series>
         {scenes.map((scene, index) => {
           const dur = scene.durationInFrames || 150;
           return (
-            <React.Fragment key={`${scene.scene_number}-${index}`}>
-              <TransitionSeries.Sequence durationInFrames={dur}>
-                <NarrationScene
-                  scene={scene}
-                  duration={dur}
-                  audioDurationInFrames={Math.ceil(
-                    (scene.audioDurationSeconds || dur / 30) * 30,
-                  )}
-                  audioOffset={index === 0 ? 0 : tFrames}
-                />
-              </TransitionSeries.Sequence>
-              <TransitionSeries.Transition
-                presentation={fade()}
-                timing={linearTiming({ durationInFrames: tFrames })}
+            <Series.Sequence key={`${scene.scene_number}-${index}`} durationInFrames={dur}>
+              <NarrationScene
+                scene={scene}
+                duration={dur}
+                audioDurationInFrames={Math.ceil(
+                  (scene.audioDurationSeconds || dur / 30) * 30,
+                )}
               />
-            </React.Fragment>
+            </Series.Sequence>
           );
         })}
-        <TransitionSeries.Sequence durationInFrames={30}>
+        <Series.Sequence durationInFrames={30}>
           <LikeAndSubscribeScene />
-        </TransitionSeries.Sequence>
-      </TransitionSeries>
+        </Series.Sequence>
+      </Series>
       <Atmosphere />
       <LogoOverlay scenes={scenes} tFrames={tFrames} />
     </AbsoluteFill>
@@ -263,7 +252,7 @@ export const calculateNarrationMetadata: CalculateMetadataFunction<
   NarrationVideoProps
 > = async ({ props }) => {
   const fps = 30;
-  const tFrames = 8;
+  const tFrames = 0;
   const likeAndSubscribeDur = 30;
 
   const updatedScenes = await Promise.all(
