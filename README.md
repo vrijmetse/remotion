@@ -37,6 +37,14 @@ npx remotion render
 npx remotion upgrade
 ```
 
+## Deployment
+
+To update the deployment on AWS Lambda, run:
+
+```console
+npx remotion lambda sites create src/index.ts --site-name=my-remotion --region=ap-southeast-1
+```
+
 ## Docs
 
 Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).

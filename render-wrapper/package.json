@@ -1,0 +1,18 @@
+{
+  "name": "remotion-render-wrapper",
+  "version": "1.0.0",
+  "description": "Thin wrapper Lambda that accepts simple JSON and delegates to Remotion Lambda",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "package": "npm run build && cd dist && zip -r ../render-wrapper.zip . && cd .. && cp -r node_modules render-wrapper-deps && cd render-wrapper-deps && zip -r ../render-wrapper.zip . && cd .. && rm -rf render-wrapper-deps",
+    "deploy": "bash deploy.sh"
+  },
+  "dependencies": {
+    "@remotion/lambda": "4.0.428"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "typescript": "5.9.3"
+  }
+}
