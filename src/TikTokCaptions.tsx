@@ -15,14 +15,15 @@ const HIGHLIGHT_TEXT = "black";
 const DEFAULT_TEXT_COLOR = "white";
 const SWITCH_CAPTIONS_EVERY_MS = 2500;
 
-const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
+const PRE_APPEAR_MS = 200;
+
+const CaptionPage: React.FC<{ page: TikTokPage; startFrame: number }> = ({ page, startFrame }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // The 'frame' here is relative to the start of the Sequence (this page).
-  // We need to add the page's start offset to get the time relative to the scene.
-  const offsetFrame = Math.floor((page.startMs / 1000) * fps);
-  const currentTimeMs = ((frame + offsetFrame) / fps) * 1000;
+  // The 'frame' here is relative to the start of the Sequence.
+  // We add the absolute startFrame to get the exact time relative to the scene.
+  const currentTimeMs = ((frame + startFrame) / fps) * 1000;
 
   return (
     <AbsoluteFill
@@ -52,8 +53,6 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
           // Absolute comparison works because currentTimeMs is relative to scene start
           const isActive =
             currentTimeMs >= token.fromMs && currentTimeMs < token.toMs;
-          
-          const hasBeenSpoken = currentTimeMs >= token.fromMs;
 
           return (
             <span
@@ -69,7 +68,7 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
                 transition: "transform 0.12s, color 0.12s, background-color 0.12s, text-shadow 0.12s",
                 display: "inline-block",
                 textShadow: isActive ? "none" : "0 4px 15px rgba(0,0,0,1)",
-                opacity: hasBeenSpoken ? 1 : 0,
+                opacity: 1,
               }}
             >
               {token.text.toUpperCase()}
@@ -95,12 +94,33 @@ export const TikTokCaptions: React.FC<{ captions: Caption[]; fps: number }> = ({
   return (
     <AbsoluteFill>
       {pages.map((page, index) => {
-        // Start frame relative to the scene (0)
-        const startFrame = Math.floor((page.startMs / 1000) * fps);
+        // Start showing the caption slightly before the first word is spoken
+        // so the viewer can anticipate it.
+        let intendedStartMs = page.startMs - PRE_APPEAR_MS;
+        
+        // Prevent overlapping with the PREVIOUS page's last spoken word
+        const prevPage = pages[index - 1];
+        if (prevPage) {
+           const prevLastTokenMs = prevPage.tokens[prevPage.tokens.length - 1].toMs;
+           intendedStartMs = Math.max(intendedStartMs, prevLastTokenMs);
+        }
+        intendedStartMs = Math.max(0, intendedStartMs);
+
+        const startFrame = Math.floor((intendedStartMs / 1000) * fps);
         
         // Calculate when the next page starts to avoid overlap
-        const nextStartFrame = pages[index + 1] 
-          ? Math.floor((pages[index + 1].startMs / 1000) * fps)
+        let nextStartMs = pages[index + 1] 
+          ? pages[index + 1].startMs - PRE_APPEAR_MS
+          : null;
+          
+        if (nextStartMs !== null) {
+             const lastTokenMs = page.tokens[page.tokens.length - 1].toMs;
+             nextStartMs = Math.max(nextStartMs, lastTokenMs);
+             nextStartMs = Math.max(0, nextStartMs);
+        }
+        
+        const nextStartFrame = nextStartMs !== null 
+          ? Math.floor((nextStartMs / 1000) * fps)
           : null;
 
         // Duration calculation
@@ -118,7 +138,7 @@ export const TikTokCaptions: React.FC<{ captions: Caption[]; fps: number }> = ({
             durationInFrames={durationInFrames}
             layout="none"
           >
-            <CaptionPage page={page} />
+            <CaptionPage page={page} startFrame={startFrame} />
           </Sequence>
         );
       })}
