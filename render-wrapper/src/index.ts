@@ -11,6 +11,7 @@ interface RenderPayload {
   action?: "render";
   composition: string;
   inputProps: Record<string, unknown>;
+  logoUrl?: string;
   /** Optional overrides — sensible defaults provided */
   serveUrl?: string;
   region?: AwsRegion;
@@ -94,7 +95,10 @@ const handleRender = async (payload: RenderPayload) => {
     functionName,
     composition,
     codec: overrides.codec ?? "h264",
-    inputProps,
+    inputProps: {
+      ...inputProps,
+      ...(payload.logoUrl ? { logoUrl: payload.logoUrl } : {}),
+    },
     privacy: overrides.privacy ?? "public",
     framesPerLambda: overrides.framesPerLambda ?? undefined,
     logLevel: overrides.logLevel ?? "info",

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   AbsoluteFill,
+  Audio,
   Img,
   interpolate,
   useCurrentFrame,
@@ -8,7 +9,6 @@ import {
   Sequence,
   Series,
 } from "remotion";
-import { Audio } from "@remotion/media";
 import { getAudioDuration } from "./getAudioDuration";
 import type { Caption } from "@remotion/captions";
 import { TikTokCaptions } from "./TikTokCaptions";
@@ -38,6 +38,7 @@ export type SceneType = {
 export type NarrationVideoProps = {
   scenes: SceneType[];
   bgMusicSrc?: string;
+  logoUrl?: string;
 };
 
 const Atmosphere: React.FC = () => (
@@ -135,14 +136,18 @@ const NarrationScene: React.FC<{
           <TikTokCaptions captions={scene.captions} fps={30} />
         )}
       </AbsoluteFill>
-      <Audio src={scene.audioSrc} />
+      <Sequence from={2} layout="none">
+        <Audio src={scene.audioSrc} />
+      </Sequence>
     </AbsoluteFill>
   );
 };
 
-const LogoOverlay: React.FC<{ scenes: SceneType[]; tFrames: number }> = ({ scenes, tFrames }) => {
+const LogoOverlay: React.FC<{ scenes: SceneType[]; tFrames: number; logoUrl?: string }> = ({ scenes, tFrames, logoUrl }) => {
   const frame = useCurrentFrame();
   
+  if (!logoUrl) return null;
+
   const scenesDuration = scenes.reduce((acc, s) => acc + (s.durationInFrames || 150), 0) - Math.max(0, scenes.length - 1) * tFrames;
   const lastScene = scenes[scenes.length - 1];
   const lastSceneDur = lastScene?.durationInFrames || 150;
@@ -162,7 +167,7 @@ const LogoOverlay: React.FC<{ scenes: SceneType[]; tFrames: number }> = ({ scene
   return (
     <AbsoluteFill style={{ pointerEvents: "none", opacity }}>
       <Img
-        src="https://res.cloudinary.com/dkrpeooca/image/upload/v1773184134/b_can_you_just_add_whi-removebg-preview_gebst8.png"
+        src={logoUrl}
         style={{
           width: "280px",
           height: "auto",
@@ -212,6 +217,7 @@ const LikeAndSubscribeScene: React.FC = () => {
 export const NarrationVideo: React.FC<NarrationVideoProps> = ({
   scenes,
   bgMusicSrc,
+  logoUrl,
 }) => {
   const tFrames = 0;
   return (
@@ -237,7 +243,7 @@ export const NarrationVideo: React.FC<NarrationVideoProps> = ({
         </Series.Sequence>
       </Series>
       <Atmosphere />
-      <LogoOverlay scenes={scenes} tFrames={tFrames} />
+      <LogoOverlay scenes={scenes} tFrames={tFrames} logoUrl={logoUrl} />
     </AbsoluteFill>
   );
 };
@@ -253,10 +259,10 @@ export const calculateNarrationMetadata: CalculateMetadataFunction<
     props.scenes.map(async (scene) => {
       const aDur = await getAudioDuration(scene.audioSrc);
       const captions = scene.captions ?? [];
-      const basePadding = 15;
+      const basePadding = 5;
       const durInFrames = Math.max(
         Math.ceil(aDur * fps) + basePadding,
-        105,
+        45,
       );
       return {
         ...scene,

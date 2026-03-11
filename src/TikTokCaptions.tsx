@@ -15,7 +15,7 @@ const HIGHLIGHT_TEXT = "black";
 const DEFAULT_TEXT_COLOR = "white";
 const SWITCH_CAPTIONS_EVERY_MS = 2500;
 
-const PRE_APPEAR_MS = 200;
+const PRE_APPEAR_MS = 100;
 
 const CaptionPage: React.FC<{ page: TikTokPage; startFrame: number }> = ({ page, startFrame }) => {
   const frame = useCurrentFrame();
