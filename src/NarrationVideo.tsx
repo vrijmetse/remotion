@@ -5,6 +5,7 @@ import {
   interpolate,
   useCurrentFrame,
   CalculateMetadataFunction,
+  Sequence,
 } from "remotion";
 import { Audio } from "@remotion/media";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -76,10 +77,11 @@ const NarrationScene: React.FC<{
   scene: SceneType;
   duration: number;
   audioDurationInFrames: number;
-}> = ({ scene, duration, audioDurationInFrames }) => {
+  audioOffset: number;
+}> = ({ scene, duration, audioDurationInFrames, audioOffset }) => {
   const frame = useCurrentFrame();
   const activeCue = useMemo(() => getSafeCue(scene.technical_cue), [scene.technical_cue]);
-  const mDur = Math.min(duration, audioDurationInFrames + 15);
+  const mDur = Math.min(duration, audioDurationInFrames + 15 + audioOffset);
 
   const opacity = interpolate(
     frame,
@@ -136,12 +138,14 @@ const NarrationScene: React.FC<{
           filter: visualFilter,
         }}
       />
-      <AbsoluteFill style={{ opacity }}>
-        {scene.captions && scene.captions.length > 0 && (
-          <TikTokCaptions captions={scene.captions} fps={30} />
-        )}
-      </AbsoluteFill>
-      <Audio src={scene.audioSrc} />
+      <Sequence from={audioOffset} layout="none">
+        <AbsoluteFill style={{ opacity }}>
+          {scene.captions && scene.captions.length > 0 && (
+            <TikTokCaptions captions={scene.captions} fps={30} />
+          )}
+        </AbsoluteFill>
+        <Audio src={scene.audioSrc} />
+      </Sequence>
     </AbsoluteFill>
   );
 };
@@ -235,6 +239,7 @@ export const NarrationVideo: React.FC<NarrationVideoProps> = ({
                   audioDurationInFrames={Math.ceil(
                     (scene.audioDurationSeconds || dur / 30) * 30,
                   )}
+                  audioOffset={index === 0 ? 0 : tFrames}
                 />
               </TransitionSeries.Sequence>
               <TransitionSeries.Transition
