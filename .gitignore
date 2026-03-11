@@ -146,3 +146,4 @@ render-wrapper/dist/
 
 # Output of n8n inputs if they are generated dynamically
 input.json
+build

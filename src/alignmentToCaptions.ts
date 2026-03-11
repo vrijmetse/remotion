@@ -10,7 +10,7 @@ export const alignmentToCaptions = (
   alignment: ElevenLabsAlignment,
 ): Caption[] => {
   const captions: Caption[] = [];
-  let currentWord = "";
+  let currentText = "";
   let wordStartMs = 0;
   let wordEndMs = 0;
 
@@ -19,33 +19,39 @@ export const alignmentToCaptions = (
     const startMs = Math.round(alignment.character_start_times_seconds[i] * 1000);
     const endMs = Math.round(alignment.character_end_times_seconds[i] * 1000);
 
-    // If we encounter a space or newline, it signals the end of a word in ElevenLabs data
     if (char === " " || char === "\n") {
-      if (currentWord) {
-        captions.push({
-          // Remotion wants the space BEFORE the word for their delimiter logic
-          text: (captions.length === 0 ? "" : " ") + currentWord,
-          startMs: wordStartMs,
-          endMs: wordEndMs,
-          timestampMs: wordStartMs,
-          confidence: null,
-        });
-        currentWord = "";
+      // Extend the current word's end time to include the space
+      // This prevents the highlight from flickering off between words
+      if (currentText) {
+        wordEndMs = endMs;
       }
     } else {
-      // If it's the first character of a new word, grab the start time
-      if (!currentWord) {
+      // If the previous character was a space, we are starting a new word
+      if (i > 0 && (alignment.characters[i - 1] === " " || alignment.characters[i - 1] === "\n")) {
+        if (currentText) {
+          captions.push({
+            text: currentText,
+            startMs: wordStartMs,
+            endMs: wordEndMs,
+            timestampMs: wordStartMs,
+            confidence: null,
+          });
+          currentText = "";
+        }
+      }
+      
+      if (!currentText) {
         wordStartMs = startMs;
       }
-      currentWord += char;
+      currentText += char;
       wordEndMs = endMs;
     }
   }
 
-  // Handle the very last word if there's no trailing space in the alignment data
-  if (currentWord) {
+  // Handle the very last word
+  if (currentText) {
     captions.push({
-      text: (captions.length === 0 ? "" : " ") + currentWord,
+      text: currentText,
       startMs: wordStartMs,
       endMs: wordEndMs,
       timestampMs: wordStartMs,

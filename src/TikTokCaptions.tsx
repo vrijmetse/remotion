@@ -19,9 +19,10 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Since this is inside a TransitionSeries.Sequence, 
-  // frame 0 is the start of the scene.
-  const currentTimeMs = (frame / fps) * 1000;
+  // The 'frame' here is relative to the start of the Sequence (this page).
+  // We need to add the page's start offset to get the time relative to the scene.
+  const offsetFrame = Math.floor((page.startMs / 1000) * fps);
+  const currentTimeMs = ((frame + offsetFrame) / fps) * 1000;
 
   return (
     <AbsoluteFill
