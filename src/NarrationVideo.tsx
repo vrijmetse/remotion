@@ -29,7 +29,6 @@ export type SceneType = {
   narrator_audio: string;
   audioSrc: string;
   technical_cue: TechnicalCue;
-  estimated_duration_seconds: number;
   durationInFrames?: number;
   audioDurationSeconds?: number;
   captions?: Caption[];
